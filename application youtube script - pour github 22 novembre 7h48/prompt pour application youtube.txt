@@ -1,0 +1,1031 @@
+Tu es un builder d’applications no-code.
+Crée une application complète, déjà fonctionnelle, appelée “Content Engine Pro”.
+
+1. Objectif global de l’app
+
+L’application sert à gérer la création de contenu YouTube/vidéo pour plusieurs formations (pare-brise, arabe 3D, cosmétiques, ebook, etc.).
+
+Elle doit permettre pour chaque formation :
+
+de gérer les colonnes de contenus (SEO, Concurrents, Valeur/Tutos, Passions, Challenges, Mon histoire)
+
+de suivre l’avancement des vidéos par étape :
+
+Titré
+
+Scripté
+
+Tourné
+
+Monté
+
+Programmé sur YouTube
+
+de suivre la motivation et la productivité dans le temps (graphique)
+
+de donner une vue globale ultra claire sous forme de dashboard.
+
+L’application doit être :
+
+entièrement fonctionnelle dès maintenant
+
+responsive : utilisable parfaitement en version desktop (PC/Mac) et mobile (iPhone/Android)
+
+en Dark Mode par défaut, avec possibilité de Light Mode (toggle)
+
+visuellement inspirée des interfaces : Apple / Tesla / iOS, dark, minimaliste, très propre.
+
+2. Styles & Design
+
+Style général :
+
+Dark mode par défaut :
+
+Fond : #050509 à #0B0C10 (noir très profond)
+
+Cartes : gris très foncé (#111319) avec léger effet verre (glasmorphism léger)
+
+Texte : blanc cassé (#F5F5F7) et gris clair (#9FA4B3)
+
+Accents : dégradés bleu/violet et bleu/cyan pour les courbes, doré doux pour la progression globale.
+
+Light mode : option activable dans les paramètres (fond blanc cassé, cartes gris très clair, texte noir).
+
+Police : équivalent SF Pro / San Francisco, arrondi, sobre.
+
+Bords : arrondis (8 à 16 px), ombres très légères (style Apple).
+
+Inspiration visuelle :
+
+Version desktop :
+
+colonne de gauche avec menu et gros ronds de stats
+
+à droite, titre de la colonne (“Valeur/Tutos” etc.), graph motivation/productivité, puis liste de vidéos.
+
+Version mobile :
+
+gros titre “Content Engine Pro”
+
+ronds de stats sur le côté ou en haut
+
+cartes cliquables pour les catégories (Valeur/Tutos, SEO, etc.)
+
+graph motivation/productivité dessous
+
+puis liste de vidéos avec barre de progression.
+
+L’UI doit être fluide, lisible, sans surcharge.
+
+3. Données / Collections (bases)
+
+Crée les collections suivantes avec ces champs exacts.
+
+3.1. Formations
+
+id (auto, identifiant)
+
+name (string) – Nom de la formation, ex : “Plan Pare-Brise”, “Arabe 3D”, “Cosmétiques maison”
+
+description (text) – description courte
+
+image (image) – visuel de la formation (optionnel)
+
+accentColor (string) – code couleur d’accent, ex : #4A6BFF
+
+createdAt (datetime, auto)
+
+Comportement :
+Lorsqu’une nouvelle formation est créée, tu dois automatiquement créer ses 6 colonnes standards dans la collection Columns (voir ci-dessous).
+
+3.2. Columns (colonnes de contenu)
+
+Chaque formation possède 6 colonnes de contenu par défaut :
+
+SEO
+
+Concurrents
+
+Valeur / Tutos
+
+Passions
+
+Challenges
+
+Mon histoire
+
+Champs :
+
+id (auto)
+
+formation (relation → Formations)
+
+name (string) – nom de la colonne
+
+order (number) – ordre d’affichage (1 à 6)
+
+icon (string ou emoji) – ex : “🔍” pour SEO, “⭐” pour Valeur, etc.
+
+3.3. Videos
+
+Chaque vidéo correspond à un script/une idée dans une colonne donnée.
+
+Champs :
+
+id (auto)
+
+formation (relation → Formations)
+
+column (relation → Columns)
+
+title (string) – titre de la vidéo
+
+status (enum string, valeurs possibles : titré, scripté, tourné, monté, programmé)
+
+progress (number, 0–100) – valeur calculée automatiquement selon status
+
+script (long text) – script de la vidéo
+
+storyboard (long text) – description des scènes / découpage
+
+brollKeywords (text) – mots-clés pour B-roll (ex : “atelier, voiture, route, pluie”)
+
+cameraPlan (text) – recommandations caméra (ex : “plan poitrine, 3/4, 35mm”)
+
+soundDesign (text) – idées de musique/bruitages
+
+checklistTournage (rich text) – liste à cocher pour le tournage
+
+checklistMontage (rich text) – liste à cocher pour le montage
+
+youtubeUrl (string) – lien YouTube une fois programmée/publiée
+
+plannedDate (date) – date de publication prévue
+
+createdAt (datetime auto)
+
+Règle automatique de progression :
+
+Si status = "titré" → progress = 20
+
+Si status = "scripté" → progress = 40
+
+Si status = "tourné" → progress = 60
+
+Si status = "monté" → progress = 80
+
+Si status = "programmé" → progress = 100
+
+À chaque changement de status, recalculer progress selon cette règle.
+
+3.4. Productivity
+
+Sert à tracer les courbes de motivation et productivité.
+
+Champs :
+
+id (auto)
+
+formation (relation → Formations)
+
+date (date)
+
+productivityPoints (number) – score de productivité du jour
+
+motivationLevel (enum string : très_haute, haute, moyenne, basse, très_basse)
+
+Barème conseillé pour la productivité :
+
++2 points par vidéo passée à scripté
+
++3 points par vidéo passée à tourné
+
++2 points par vidéo passée à monté
+
++1 point par vidéo passée à programmé
+
+À chaque fois qu’une vidéo change de statut, ajouter les points du jour correspondant dans l’entrée Productivity du jour pour cette formation (ou en créer une si elle n’existe pas encore).
+
+La courbe Productivité = somme des productivityPoints par jour.
+La courbe Motivation = valeur numérique associée à motivationLevel :
+
+très_basse = 1
+
+basse = 2
+
+moyenne = 3
+
+haute = 4
+
+très_haute = 5
+
+3.5. DailyPlan (facultatif mais recommandé)
+
+Sert à afficher une carte “Plan du jour recommandé”.
+
+Champs :
+
+id
+
+formation (relation → Formations)
+
+date (date)
+
+suggestedScripts (number) – nombre de scripts conseillés
+
+suggestedRecordings (number) – nombre de tournages conseillés
+
+suggestedEdits (number) – nombre de montages conseillés
+
+note (text) – texte de coaching court, ex : “Énergie moyenne, fais 2 scripts simples aujourd’hui”.
+
+La logique peut être basée sur :
+
+la motivation du jour
+
+le retard ou l’avance de la formation (progression globale)
+
+Exemple de règle simple :
+
+si motivation ≥ 4 → 4 scripts + 2 tournages
+
+si motivation = 3 → 2 scripts + 1 tournage
+
+si motivation ≤ 2 → 1 tâche simple (un script ou un montage).
+
+4. Pages et navigation
+
+L’app doit être responsive.
+Sur desktop : layout en largeur, avec menu latéral.
+Sur mobile : layout en pile verticale, avec gros blocs.
+
+4.1. Page Home
+
+But : choisir une formation ou en créer une.
+
+Éléments :
+
+Titre : “Content Engine Pro”
+
+Grille de cartes (ou liste) de formations :
+
+Nom
+
+Description courte
+
+Progression globale (barre ou cercle)
+
+Bouton “+ Nouvelle formation”
+
+Comportement :
+
+Cliquer sur une formation ouvre la page DashboardFormation pour cette formation.
+
+Cliquer sur “+ Nouvelle formation” ouvre un formulaire : name, description, accentColor, image.
+Après création : créer automatiquement les 6 colonnes dans Columns.
+
+Responsive :
+
+Desktop : grille de cartes sur 2–3 colonnes.
+
+Mobile : liste verticale de cartes pleine largeur.
+
+4.2. Page DashboardFormation (version desktop)
+
+C’est l’écran qui ressemble à l’image Dark Mode avec :
+
+à gauche : menu des colonnes + gros ronds de stats
+
+à droite : titre de la colonne active, graph, liste de vidéos.
+
+Layout général :
+
+Colonne de gauche (sidebar fixe) :
+
+En haut : nom de la formation (dropdown pour changer de formation).
+
+Liste des colonnes texte :
+
+SEO
+
+Concurrents
+
+Valeur / Tutos
+
+Passions
+
+Challenges
+
+Mon histoire
+La colonne active est surlignée (texte plus clair + barre verticale).
+
+En dessous : stack vertical de gros ronds de stats, chacun cliquable :
+
+Progression globale (en %)
+
+Titrés (compteur de vidéos avec status ≥ titré)
+
+Scriptés
+
+Tournés
+
+Montés
+
+Programmés
+Chaque rond montre :
+
+le pourcentage (ou le nombre)
+
+la légende (ex : “Titrés 30/30”).
+
+Comportement des ronds :
+
+Clique sur “Titrés” → dans la liste de vidéos à droite, afficher uniquement les vidéos dont status >= titré dans la colonne active.
+
+Clique sur “Scriptés” → filtrer sur status = scripté.
+
+Etc.
+
+Clique sur “Progression globale” → afficher toutes les vidéos de la formation dans la colonne active sans filtre de statut.
+
+Zone centrale/droite (contenu) :
+
+En haut :
+
+Titre de la colonne active (ex : “Valeur / Tutos”)
+
+Juste en dessous : Graphique Motivation / Productivité
+
+Abscisse : jours (par ex. 1–30)
+
+Courbe 1 : Productivité (ligne bleu cyan)
+
+Courbe 2 : Motivation (ligne violet)
+
+Source de données : Productivity filtré par formation.
+
+En dessous : Liste des vidéos de la colonne active
+
+Tableau ou cartes avec :
+
+title
+
+status (badge : Titré / Scripté / Tourné / Monté / Programmé)
+
+progress (barre de progression fine, colorée)
+
+éventuellement la plannedDate
+
+bouton “Ouvrir” pour aller sur la page VideoDetails.
+
+Tout en bas : bouton “+ Nouvelle vidéo” pour cette colonne.
+
+Responsive :
+
+Sur grand écran, garder la sidebar fixe à gauche et le contenu à droite.
+
+Sur tablette moyenne, réduire un peu la largeur de la sidebar.
+
+4.3. Page DashboardFormation (version mobile)
+
+Sur mobile, la même logique mais en pile verticale.
+
+Éléments (dans l’ordre du haut vers le bas) :
+
+Titre : “Content Engine Pro” + nom de la formation (dropdown simple).
+
+Rond de “Progression globale” en haut à gauche (grand cercle avec %).
+
+En dessous, une liste horizontale de petites cartes ou boutons pour les colonnes :
+
+Valeur / Tutos
+
+SEO
+
+Concurrents
+
+Passions
+
+Challenges
+
+Mon histoire
+(scroll horizontal si besoin)
+
+Bloc Motivation/Productivité avec le graph.
+
+Stack de vidéos de la colonne sélectionnée :
+
+Pour chaque vidéo : titre, label de statut, barre de progression, puis un chevron “>” pour ouvrir.
+
+Bouton flottant “+” pour ajouter une nouvelle vidéo.
+
+Les ronds de stats secondaires (Titrés, Scriptés, Tournés, Montés, Programmés) peuvent être :
+
+soit affichés dans un carrousel horizontal sous le rond de progression globale
+
+soit dans une section “Statistiques” accessible par un swipe ou un bouton “Voir les stats”.
+
+Chaque rond reste cliquable et agit comme filtre, comme sur desktop.
+
+4.4. Page VideoDetails
+
+But : voir et modifier une vidéo précise, changer son statut, gérer script/storyboard/checklists.
+
+Éléments :
+
+Titre de la vidéo
+
+Colonne + formation affichées (ex : “Formation Pare-Brise – Colonne : Valeur/Tutos”)
+
+Select/boutons pour status (Titré / Scripté / Tourné / Monté / Programmé).
+
+Quand l’utilisateur change le status, appliquer la règle de progress et mettre à jour la productivité du jour.
+
+Bloc “Progression” : barre + pourcentage.
+
+Onglets ou sections :
+
+Script
+
+Zone de texte éditable
+
+Bouton “Générer / améliorer le script avec l’IA” (action IA utilisant le titre, la colonne et la formation pour proposer un script structuré).
+
+Storyboard
+
+Zone de texte
+
+Bouton “Générer un storyboard” : décrire les scènes, timestamps, B-roll et mouvements caméra.
+
+Checklists
+
+Checklist tournage (cases à cocher)
+
+Checklist montage (cases à cocher)
+
+Publication
+
+Champ plannedDate
+
+Champ youtubeUrl
+
+Responsive :
+
+Desktop : mise en colonnes (script à gauche, storyboard à droite, etc.)
+
+Mobile : tout en pile verticale avec sections repliables.
+
+4.5. Page Settings
+
+Toggle Dark Mode / Light Mode
+
+Choix de la couleur d’accent globale (par défaut : bleu/violet néon)
+
+Paramètres du barème de productivité (modifiables)
+
+Option pour activer/désactiver les cartes de “Plan du jour”.
+
+5. Logique, filtres et calculs
+
+Filtre par colonne :
+
+Sur le dashboard, lorsque l’utilisateur sélectionne une colonne (SEO, Valeur/Tutos, etc.), toutes les données affichées (liste des vidéos, stats, graph de progression par status) doivent être filtrées sur cette colonne et cette formation.
+
+Filtre par rond de statut :
+
+Clic sur un rond (Titrés, Scriptés, Tournés, Montés, Programmés) = filtre sur status dans la liste des vidéos.
+
+Le rond “Progression globale” enlève le filtre de statut (montre tout).
+
+Calcul de la progression globale (par formation + colonne active) :
+
+progressionGlobale = moyenne des progress de toutes les vidéos de la formation (ou de la colonne active, selon le contexte)
+
+Afficher ce pourcentage dans le rond “Progression globale”.
+
+Statistiques par statut :
+
+Rond “Titrés” : nombre de vidéos dont status est au moins “titré” / nombre total de vidéos prévues dans cette colonne (ou formation).
+
+Même logique pour Scriptés, Tournés, Montés, Programmés.
+
+Courbe Motivation / Productivité :
+
+Récupérer dans Productivity toutes les entrées de la formation sur une période (ex. 30 derniers jours).
+
+Tracer deux lignes :
+
+Y1 = productivityPoints
+
+Y2 = valeur numérique de motivationLevel.
+
+Saisie de la motivation :
+
+Ajouter, dans le dashboard formation, un petit bloc “Motivation du jour” avec :
+
+5 boutons ou un slider (très basse → très haute).
+
+Quand l’utilisateur choisit une valeur, créer/mettre à jour l’entrée Productivity du jour pour cette formation.
+
+Plan du jour (si DailyPlan activé) :
+
+Sur la base de la motivation + progression globale, calculer et remplir DailyPlan avec un nombre de scripts/tournages/montages conseillés, et une petite phrase de coaching.
+
+Afficher ce plan dans une carte en haut de la liste de vidéos, style :
+“Aujourd’hui : fais 2 scripts + 1 tournage. Motivation moyenne : l’important est la constance 😉”.
+
+6. Responsive et comportements spécifiques
+
+Desktop :
+
+Sidebar fixe à gauche, ronds de stats sous le menu colonnes.
+
+Zone principale : titre de la colonne, graphique, puis liste de vidéos.
+
+Utiliser une largeur max type 1440px, centrée, avec marges.
+
+Mobile :
+
+Layout vertical.
+
+Ronds principaux (au moins “Progression globale”) visibles en haut.
+
+Catégories (colonnes) en carrousel horizontal.
+
+Graph sous les catégories.
+
+Liste de vidéos sous le graph.
+
+Bouton flottant “+” en bas à droite pour ajouter une vidéo.
+
+L’interface doit garder le même esprit visuel que les deux exemples :
+
+version dark desktop avec sidebar + ronds à gauche,
+
+version dark mobile avec gros titre, ronds et cartes.
+
+7. Résultat attendu
+
+À la fin de la génération :
+
+l’application Content Engine Pro doit être utilisable immédiatement :
+
+création de formations,
+
+colonnes auto-générées,
+
+ajout de vidéos,
+
+changement de statuts,
+
+progression calculée,
+
+graphiques motivation/productivité affichés,
+
+filtre par colonne et par statut opérationnel.
+
+Le design doit être fidèle : dark, minimaliste, inspiré Apple/Tesla, parfaitement lisible sur desktop et mobile.
+
+
+
+
+8. Import des titres depuis Notion (calendrier par jours)
+
+J’ai déjà préparé plus de 144 titres par projet dans Notion, organisés dans un calendrier hebdomadaire.
+J’exporte ce calendrier en CSV.
+
+Exemple de colonnes dans le CSV Notion :
+
+Nom
+
+Autre titre possible
+
+Avancée
+
+Lieu
+
+Tournage (date)
+
+Volume/mensuel
+
+concurrence
+
+mot clef seo
+
+8.0. Champs supplémentaires à ajouter dans Videos
+
+Ajoute ces champs dans la collection Videos (en plus de ce qui est déjà défini) :
+
+altTitle (string) – correspond à Autre titre possible
+
+shootLocation (string) – correspond à Lieu
+
+seoVolume (string ou number) – correspond à Volume/mensuel
+
+seoCompetition (string ou number) – correspond à concurrence
+
+seoKeyword (string) – correspond à mot clef seo
+
+8.1. Organisation par jours de la semaine (rappel de la règle)
+
+Dans mon calendrier Notion, chaque jour correspond à une catégorie de contenu :
+
+Dimanche → SEO
+
+Lundi → Concurrents
+
+Mardi → Valeur / Tutos
+
+Mercredi → Mon parcours (→ colonne “Mon histoire” dans l’app)
+
+Jeudi → mélange : 2 passions + 1 SEO + 1 concurrent (mais par défaut on peut considérer Passions)
+
+Vendredi → généralement vide (pas de règle fixe)
+
+Samedi → mélange : 2 challenges + 1 tuto valeur + 1 parcours (par défaut on peut considérer Challenges)
+
+Les dates de ce calendrier sont stockées dans la colonne Tournage du CSV (format date).
+
+8.2. Interface d’import Notion
+
+Sur la page DashboardFormation, ajoute un bouton bien visible :
+
+“Importer depuis Notion (CSV)”
+
+Quand on clique :
+
+Ouvre un modal ou une page “Import Notion”.
+
+Champs à demander :
+
+Fichier CSV à uploader
+
+Formation cible (pré-remplie avec la formation courante)
+
+Colonne par défaut (liste : SEO / Concurrents / Valeur / Passions / Challenges / Mon histoire) – utilisée si on ne peut pas deviner la colonne.
+
+Lis les en-têtes du CSV et propose un mapping automatique, avec par défaut :
+
+Nom → colonne titre
+
+Autre titre possible → altTitle
+
+Avancée → champ d’avancement
+
+Lieu → shootLocation
+
+Tournage → date
+
+Volume/mensuel → seoVolume
+
+concurrence → seoCompetition
+
+mot clef seo → seoKeyword
+Laisse la possibilité à l’utilisateur de modifier ce mapping si besoin.
+
+
+
+8.3. Déduction “intelligente” de la colonne (SEO, Concurrents, etc.)
+
+L’objectif est de déduire la bonne colonne même si les termes changent un peu, qu’il y a des fautes, des variations (“histoires perso”, “tuttos valeur”, “chalenge”, etc.), et en utilisant à la fois le texte du champ Nom et le jour de la semaine (donné par Tournage).
+
+Pour chaque ligne du CSV :
+
+8.3.1. Normalisation du texte
+
+Récupérer le contenu de Nom.
+
+Le normaliser :
+
+passer en minuscules,
+
+retirer les accents,
+
+retirer les chiffres, : et ponctuation,
+
+réduire les espaces multiples.
+
+On obtient une chaîne nom_normalise.
+
+8.3.2. Dictionnaire de mots-clés / synonymes par colonne
+
+Définir en dur une liste de mots-clés / synonymes / termes approchants pour chaque colonne (insensible à la casse et aux petites fautes) :
+
+SEO
+
+mots-clés : ["seo", "referencement", "mot cle", "mots cle", "mots clef", "mot clef", "mot-cle", "search", "google"]
+
+Concurrents
+
+mots-clés : ["concurrent", "concurrence", "competiteur", "competiteur", "analyse concurrente", "titre concurrent"]
+
+Valeur / Tutos
+
+mots-clés : ["tuto", "tutoriel", "valeur", "astuce", "conseil", "guide", "how to", "comment", "explication"]
+
+Passions
+
+mots-clés : ["passion", "hobby", "loisir", "vie perso", "vie personnelle", "famille", "voyage", "football", "jeu video"]
+
+Challenges
+
+mots-clés : ["challenge", "chalenge", "defi", "défi", "challenge 30 jours", "challenge 30j"]
+
+Mon histoire
+
+mots-clés : ["mon parcours", "parcours", "mon histoire", "histoire perso", "storytime", "qui je suis", "mon chemin", "ma vie"]
+
+8.3.3. Matching par similarité de texte
+
+Pour chaque colonne :
+
+calculer un score de similarité entre nom_normalise et chacun de ses mots-clés :
+
+soit en testant nom_normalise qui contient le mot-clé,
+
+soit avec une petite distance de type Levenshtein / similarité (pour tolérer des fautes comme “chalenge”, “tuttos”).
+
+si au moins un mot-clé d’une colonne apparaît (ou est très proche) dans nom_normalise, donner un score élevé à cette colonne.
+
+Obtenir ainsi, pour chaque ligne, une liste de colonnes possibles avec un score de confiance, par ex. :
+
+SEO : 0.1
+
+Concurrents : 0.7
+
+Valeur/Tutos : 0.2
+
+Passions : 0.0
+
+Challenges : 0.0
+
+Mon histoire : 0.0
+
+Si une colonne a un score clairement dominant (par ex. ≥ 0.6 et au moins 0.2 au-dessus de la suivante) :
+
+choisir cette colonne comme résultat principal du matching par texte.
+
+8.3.4. Utilisation du jour de la semaine comme deuxième signal
+
+Calculer ensuite le jour de la semaine à partir de la date Tournage :
+
+Dimanche → colonne attendue : "SEO"
+
+Lundi → "Concurrents"
+
+Mardi → "Valeur / Tutos"
+
+Mercredi → "Mon histoire"
+
+Jeudi → "Passions" (par défaut)
+
+Vendredi → aucune préférence
+
+Samedi → "Challenges" (par défaut)
+
+Appeler cette colonne attendue colonne_jour.
+
+Combinaison des deux signaux :
+
+Si le matching texte renvoie une colonne avec score ≥ 0.6 →
+
+si cette colonne est identique à colonne_jour, on la confirme à 100 %.
+
+si elle est différente de colonne_jour, on garde quand même la colonne issue du texte (on considère que le titre prime sur le jour).
+
+Si le matching texte renvoie un score mitigé (aucune colonne ≥ 0.6 ou plusieurs colonnes proches) →
+
+si colonne_jour existe (dimanche, lundi, mardi, mercredi, jeudi, samedi), on choisit colonne_jour.
+
+si nous sommes vendredi (pas de préférence), on utilisera la colonne par défaut choisie dans le formulaire d’import.
+
+Si le matching texte échoue complètement (aucun mot-clé trouvé) →
+
+utiliser directement colonne_jour si disponible,
+
+sinon (vendredi ou date vide) → utiliser la colonne par défaut.
+
+8.3.5. Indicateur de confiance et cas à valider
+
+Ajouter deux champs internes (facultatifs mais utiles) dans Videos :
+
+autoDetectedColumn (string) – nom de la colonne choisie automatiquement
+
+autoDetectionConfidence (number 0–1)
+
+Si la colonne est trouvée par texte avec score fort → autoDetectionConfidence élevé (ex. 0.8–1.0).
+
+Si la colonne provient uniquement du jour de la semaine → autoDetectionConfidence moyen (ex. 0.5).
+
+Si la colonne provient seulement de la colonne par défaut → autoDetectionConfidence faible (ex. 0.3).
+
+Après import, il est souhaitable d’afficher (dans un panneau de résumé ou une vue de logs) la liste des vidéos importées avec :
+
+leur titre,
+
+la colonne détectée,
+
+et un pictogramme d’alerte pour les lignes avec autoDetectionConfidence < 0.5, pour que l’utilisateur puisse les corriger facilement.
+
+Résultat :
+
+même si je change un peu les termes dans Notion (“histoires perso”, “tuttos valeur”, “chalenge”),
+
+et même si certains jours contiennent un mix de catégories (jeudi, samedi),
+l’app arrive à deviner la bonne colonne grâce à :
+
+la similarité de texte +
+
+le jour de la semaine +
+
+une colonne par défaut en dernier recours,
+tout en me montrant quels cas sont à vérifier manuellement.
+
+8.4. Détermination du statut (status) à partir de Avancée
+
+Utilise le texte de la colonne Avancée pour initialiser le status de la vidéo :
+
+Si Avancée est vide → status = "titré"
+
+Si le texte contient “script” ou “scripté” (insensible à la casse) → status = "scripté"
+
+Si le texte contient “tourné”, “tournage” → status = "tourné"
+
+Si le texte contient “monté”, “montage” → status = "monté"
+
+Si le texte contient “programmé”, “publié” → status = "programmé"
+
+Sinon (par défaut) → status = "titré"
+
+Ensuite, applique la règle de progression automatique définie plus haut :
+status → progress = 20 / 40 / 60 / 80 / 100.
+
+8.5. Création des vidéos à partir du CSV
+
+Pour chaque ligne valide du CSV :
+
+Créer une entrée dans Videos avec :
+
+formation = formation choisie dans le formulaire
+
+column = déterminée par les étapes 1/2/3 ci-dessus
+
+title = valeur du champ mappé au titre (Nom)
+
+altTitle = Autre titre possible
+
+status = calculé à partir de Avancée
+
+progress = calculé à partir du status
+
+shootLocation = Lieu
+
+plannedDate = valeur de Tournage (ou champ dédié à la date si nécessaire)
+
+seoVolume = Volume/mensuel
+
+seoCompetition = concurrence
+
+seoKeyword = mot clef seo
+
+les champs script, storyboard, checklistTournage, checklistMontage restent vides au départ.
+
+8.6. Gestion des doublons
+
+Avant de créer une vidéo, vérifier s’il existe déjà, dans la même formation et la même colonne, une vidéo avec exactement le même title.
+
+Si oui, ne pas dupliquer cette ligne (ou la marquer comme ignorée).
+
+8.7. Version mobile pour l’import
+
+Sur mobile :
+
+l’action “Importer depuis Notion (CSV)” doit être accessible dans un menu (icône “…” ou menu “Options”).
+
+le formulaire (fichier + formation + colonne par défaut + mapping simple) doit être affiché en pile verticale, avec de gros champs faciles à toucher.
+
+Résultat attendu :
+
+je peux exporter mon calendrier Notion en CSV,
+
+l’importer dans la bonne formation,
+
+l’app déduit automatiquement la colonne (SEO / Concurrents / etc.) et le statut selon Avancée,
+
+toutes les vidéos se retrouvent dans Videos avec les colonnes et dates correctes, prêtes à être scriptées/tournées/montées.
+
+
+
+Prompt IA pour Content Engine Pro – Génération & Transformation de Scripts Vidéo
+
+Entrées disponibles (à fournir avant la génération) :
+
+Mode – (choisir generer_depuis_titre ou transformer_audio)
+
+Titre de la vidéo – ex. « Comment X… » (le sujet principal de la vidéo)
+
+Mot-clé SEO principal (optionnel) – Mot ou expression clé à intégrer (si pertinent)
+
+Colonne de contenu – Catégorie de la vidéo (SEO, Concurrents, Valeur/Tutos, Passions, Challenges, Mon histoire)
+
+Formation cible – Nom du produit/formation à promouvoir (ex. Plan Pare-Brise, Cosmétiques, Arabe 3D…)
+
+Audience cible – Profil du public visé (ex. adulte sans diplôme, jeune entrepreneur débutant, femme indépendante…)
+
+Transcription audio brute – Texte d’un enregistrement vocal (fourni seulement si Mode = transformer_audio, durée 1–10 min, avec hésitations/répétitions possibles)
+
+Consignes en fonction du Mode sélectionné :
+
+Si Mode = generer_depuis_titre :
+
+Générer un script vidéo original et percutant en s’appuyant sur Titre, Mot-clé SEO, Colonne, Formation cible et Audience cible.
+
+Utiliser le titre comme fil conducteur du script : répondre à la promesse du titre de manière complète et engageante. Intégrer le mot-clé SEO naturellement dans le texte (s’il est fourni) pour optimiser la vidéo sans sacrifier la fluidité.
+
+Tenir compte de la colonne de contenu pour adapter l’angle de narration (voir plus bas la section Structure du script pour les variantes selon la colonne). Par ex., un tuto mettra l’accent sur les conseils pratiques, Mon histoire misera sur le récit personnel, un challenge sur la progression et le défi, etc.
+
+Garder en tête la formation cible et l’audience cible tout au long de la rédaction : le script doit parler aux besoins/spécificités de cette audience et préparer en finesse la promotion de la formation. Par ex., mentionner des problèmes ou aspirations que cette audience reconnaît, et positionner la formation comme solution idéale.
+
+Si Mode = transformer_audio :
+
+Restructurer et optimiser le contenu de la transcription audio fournie pour en faire un script vidéo professionnel. Ne pas ajouter de nouvelles idées de fond non présentes dans l’audio, mais améliorer la forme et l’organisation.
+
+Nettoyer le texte brut : supprimer les répétitions, hésitations (« euh », blancs) et digressions inutiles. Ne conserver que les éléments pertinents pour le message final.
+
+Réorganiser le discours selon la structure demandée (voir la section Structure du script ci-dessous). Par exemple, créer une véritable accroche en début de script même si l’enregistrement commençait abruptement, déplacer certaines anecdotes si nécessaire pour un meilleur enchaînement, etc.
+
+Réécrire de façon fluide et engageante : reformuler les phrases pour qu’elles s’enchaînent naturellement à l’oral. Injecter de l’émotion et de l’inspiration là où le ton était plat. On doit retrouver le même message de fond, mais exprimé de manière plus percutante et claire.
+
+Préserver le style de l’auteur tout en l’améliorant : si le ton de l’audio est chaleureux ou humoristique, conserver cette couleur. Juste éliminer les maladresses et rendre l’ensemble percutant pour le spectateur.
+
+Intégrer les éléments externes (formation cible, audience cible) : par exemple, ajouter/enrichir un appel à l’action vers la formation en fin de script si l’audio n’était pas explicite, ou souligner une anecdote de l’audio qui ferait office de preuve sociale. Le tout, sans dénaturer le témoignage original.
+
+Structure du script à respecter (modèle Funnel Club ultra-lisible) :
+
+Le script final doit comporter les sections suivantes, clairement indiquées en toutes lettres :
+
+HOOK (Accroche) – Ouverture puissante. Une à trois phrases choc pour capter immédiatement l’attention. Par exemple : une question intrigante, une statistique effrayante, une scène en plein milieu de l’action, ou l’énoncé direct d’un problème douloureux que l’audience connaît bien. L’accroche place d’emblée le spectateur au cœur du sujet et l’incite à rester pour entendre la suite. (Pas de salutations du type « Bonjour », on attaque directement.)
+
+INTRO (Introduction) – Mise en contexte rapide. Dans ce paragraphe court, expliquer pourquoi le sujet de la vidéo est crucial. Faire ressentir la douleur/le problème que l’audience rencontre (lié au thème) ou l’objectif qu’elle rêve d’atteindre. Préparer ainsi le terrain de l’histoire à venir. Maintenir le suspense sur la transformation à venir sans tout révéler, mais promettre qu’une solution ou révélation importante arrive. (L’intro doit prolonger l’accroche et donner envie d’écouter l’histoire complète.)
+
+STORY (Histoire) – Narration immersive. C’est le cœur émotionnel du script : raconter une histoire captivante en lien avec le message.
+• Scénario avant/après – Illustrer le propos via une expérience vécue ou imaginaire. Décrire le « avant » : la situation initiale difficile, les obstacles, peurs ou doutes rencontrés. Puis amener le « après » : comment les choses ont changé grâce à une découverte, une méthode ou une réalisation (idéalement liée à la solution/formation proposée). Le contraste Avant vs Après doit être marquant pour mettre en valeur la transformation.
+• Micro-détails concrets – Rendre l’histoire vivante avec des détails précis et parlants. (Exemple : « Il était 7h du matin, je buvais mon troisième café froid devant mon écran, les yeux cernés… » plutôt que « J’étais fatigué au travail… ».) Mentionner des lieux, des noms, des sensations réelles pour que l’audience s’identifie.
+• Ancrage sensoriel – Faire appel aux cinq sens et aux émotions. Décrire ce qui est vu, entendu, ressenti, touché dans la scène. (Ex : bruit strident du réveil, odeur de brûlé, vent glacial sur le visage qui donne la chair de poule…) Ces éléments plongent le spectateur dans l’histoire de manière immersive.
+• Rythme oral et pauses – Écrire comme on parle. Alterner des phrases longues pour les descriptions et des phrases très courtes pour l’impact. Utiliser des … ou des silences implicites pour créer du suspense ou souligner un moment clé. Poser des questions rhétoriques pour impliquer le spectateur (« Et là, vous devinez la suite ? »). Le but est d’entendre une vraie voix vivante derrière le texte, pas un ton monotone.
+• Authenticité et conflit – Si pertinent, être clivant : prendre un point de vue assumé, voire aller à contre-courant d’une croyance répandue. Identifier un « ennemi » clair (une idée reçue, une mauvaise habitude, une méthode concurrente inefficace…) que l’histoire va confronter. Cela ajoute du conflit narratif et captive davantage l’attention. (Ex : « On nous répète depuis toujours X… Eh bien c’est faux, j’ai découvert que… »).
+Cette section STORY doit emporter l’adhésion émotionnelle du public et préparer le terrain pour les conseils ou la solution à venir.
+
+PARTIES CLÉS (Développement) – Messages importants & valeur ajoutée. C’est la partie “pratique” du script, structurée en sous-parties si nécessaire. Adapter la forme selon la colonne de contenu :
+• Si Colonne = « SEO » ou « Valeur/Tutos » : offrir des conseils concrets, étapes ou astuces directement exploitables par le spectateur. Organiser ces points en une liste (numérotée si besoin) pour la clarté. Chaque point doit apporter une vraie valeur ou un éclaircissement. (Ex : étapes 1, 2, 3 d’un processus, ou 3 conseils clefs avec un titre percutant chacun.) Intégrer le mot-clé SEO dans ces explications de manière fluide pour optimiser le référencement de la vidéo.
+• Si Colonne = « Concurrents » : mettre en avant des comparaisons. Parler de ce que font les autres (concurrents, méthodes traditionnelles) et montrer en quoi votre approche (ou la formation cible) est différente et supérieure. Par exemple, démonter une méthode courante qui ne fonctionne pas bien, puis présenter votre méthode comme solution innovante. Cela renforce l’unicité et la valeur de ce que vous proposez.
+• Si Colonne = « Passions » : insister sur la passion commune qui unit le créateur et son audience. Faire ressortir l’enthousiasme, le plaisir lié au sujet. Par exemple, montrer comment la passion (pour un domaine, un métier, une activité) a été un moteur dans l’histoire et comment la formation cible permet d’en vivre pleinement. Le ton ici est complice et motivant, basé sur l’amour du sujet.
+• Si Colonne = « Challenges » : structurer le contenu comme un défi à relever. Décrire les étapes du challenge, les difficultés rencontrées, puis comment elles ont été surmontées. Encourager le spectateur à relever ce même défi. Le récit doit être très dynamique, axé sur le dépassement de soi, avec un suspense “est-ce qu’on va réussir ?”.
+• Si Colonne = « Mon histoire » : rester dans un registre très personnel. Partager les leçons apprises du parcours de vie ou de l’anecdote racontée. Extraire 2 ou 3 messages clés de cette histoire personnelle qui parleront à l’audience. Ici, l’émotion est à son comble – on est dans le témoignage authentique.
+Dans tous les cas, les Parties clés doivent faire progresser la compréhension du spectateur vers la solution. Chaque segment amène un élément de réponse ou un conseil pratique pour résoudre la problématique posée en intro. Bien lier les parties entre elles pour que le fil conducteur reste cohérent.
+
+OBJECTION CACHÉE – Réponse aux doutes silencieux. Identifier l’objection principale que pourrait avoir l’audience même si elle n’est pas formulée à voix haute. Par exemple : « Ça a marché pour lui, mais est-ce que ça marcherait pour moi qui [situation particulière] ? », « C’est trop beau pour être vrai », « Je manque de [temps/argent/connaissances] », etc.
+Désamorcer cette objection en apportant des éléments rassurants et crédibles. Stratégies possibles :
+• Preuve sociale – Intégrer des faits ou témoignages qui prouvent que la solution fonctionne pour d’autres comme eux. (Ex : « J’ai formé plus de 200 personnes avec cette méthode, y compris des personnes qui partaient de zéro… » ou « Sophie, l’une de mes clientes, pensait comme toi au début, et voilà ce qu’elle est parvenue à accomplir… »).
+• Mise en perspective – Relativiser l’objection en montrant soit les conséquences de l’inaction, soit en réfutant un mythe. (Ex : « Certes, cela demande un peu de temps, mais réfléchis : que seront quelques heures par semaine comparé à [bénéfice supérieur] ? »).
+L’important est de regagner la confiance du spectateur à ce stade crucial, afin qu’il soit prêt à envisager la transformation finale et l’action à entreprendre.
+
+TRANSFORMATION – Peinture du « nouvel avenir ». Décrire avec intensité la transformation positive vécue grâce à la solution (ou celle que le spectateur pourrait vivre). On montre à quoi ressemble la vie après avoir surmonté le problème ou relevé le défi.
+Reprendre l’histoire ou la situation du début et montrer comment elle est métamorphosée. Insister sur les émotions positives ressenties une fois l’objectif atteint : fierté, soulagement, joie, liberté, espoir… Le spectateur doit pouvoir se projeter mentalement et ressentir ce futur désirable.
+Par exemple : « Aujourd’hui, non seulement je [résultat atteint], mais je me lève chaque matin avec [sentiment positif]. Qui aurait cru que [rappel du point de départ] pourrait mener à ça ? ».
+Cette partie doit donner de l’énergie et de l’aspiration au public. Il faut qu’il se dise : « Moi aussi, je veux vivre cette transformation ! ». C’est l’aboutissement de l’arc narratif émotionnel, qui prépare naturellement le terrain pour l’appel à l’action suivant.
+
+CALL TO ACTION (Appel à l’action) – Conclusion engageante. Terminer le script par une invitation à agir, en lien direct avec l’histoire qu’on vient de raconter et la transformation décrite.
+Le CTA doit être discret mais stratégique : il ne s’agit pas de forcer la vente, mais de proposer la prochaine étape logique au spectateur motivé.
+Exemples de CTA efficaces :
+• Présenter brièvement la formation [Formation cible] comme l’outil ou l’accompagnement qui permettra au spectateur de vivre à son tour la transformation évoquée. (« Si toi aussi tu veux [bénéfice/résultat], alors [Formation cible] est là pour te guider pas à pas… »).
+• Inviter à en savoir plus via une action simple : visiter un lien, s’inscrire à un atelier gratuit, télécharger une ressource offerte, etc., qui fait le lien avec la formation.
+• Formuler une question ou une projection positive pour finir : « Es-tu prêt(e) à passer à l’étape suivante ? Moi, en tout cas, je suis prêt à t’y aider… On se retrouve de l’autre côté ! ».
+Le ton doit rester bienveillant et encourageant, aligné avec tout le script. Pas de jargon publicitaire agressif. L’appel à l’action doit donner envie en soulignant le bénéfice concret ou le soulagement que l’audience en retirera, plutôt qu’en forçant la décision.
+En somme, le CTA conclut l’histoire en ouvrant une porte vers l’univers de la solution (formation ou autre) pour ceux qui veulent aller plus loin. C’est la dernière impression que vous laissez : faites-la positive, motivante et claire quant à la prochaine étape.
+
+Consignes de style et ton supplémentaires :
+
+Rédiger le script intégralement en français, dans un style oral naturel, fluide et dynamique (comme une discussion moderne sur YouTube/TikTok). Le vocabulaire doit rester simple et accessible, tout en étant percutant.
+
+S’adresser directement au spectateur en utilisant « tu » (se mettre en mode conversation intime avec une personne, pas foule anonyme). Cela crée de la proximité et implique davantage l’audience.
+
+Adopter un ton convivial et crédible : le narrateur est à la fois un ami bienveillant et une personne légitime qui sait de quoi elle parle. Éviter un langage trop professoral ou trop soutenu ; rester authentique et empathique.
+
+Garder une cohérence de ton tout du long : on peut varier les émotions (par ex. sérieux lors d’une mise en garde, enthousiasme lors d’une réussite), mais sans changer de personnalité. Le script doit refléter une voix unique (celle du créateur ou de la marque).
+
+Pas de paragraphes trop longs : aérer le texte pour en faciliter la lecture à l’écran lors du tournage. Idéalement 2–3 phrases par paragraphe max, pour que le souffle de la personne qui lit puisse être naturel.
+
+Inclure éventuellement de légères touches d’humour ou de complicité si cela sied au sujet et à l’audience – un sourire ou un clin d’œil de temps en temps peut aider à l’engagement – mais ne pas en abuser surtout si le sujet est sérieux. Priorité à la clarté du message.
+
+Chaque phrase compte : éliminer les remplissages et redondances. Le script doit avoir un bon flow : chaque phrase amène logiquement à la suivante. Relire mentalement en se figurant le dire à voix haute : est-ce que ça sonne naturel ? ajuster au besoin.
+
+Si des données chiffrées, des noms ou des témoignages sont fournis en entrée (par ex. dans l’audio ou les notes), les utiliser à bon escient pour renforcer le propos (preuve sociale ou exemple concret). Ne pas inventer de faux chiffres improbables ; rester vraisemblable et honnête. Si aucune preuve sociale n’est disponible, on peut en suggérer une de manière générale (« de nombreux élèves ont… », « tel expert conseille… »), mais ce n’est pas obligatoire.
+
+Emouvoir et inspirer : à plusieurs reprises dans le script, vérifier qu’on fait passer de l’émotion. Le but est de faire ressentir des choses au spectateur (de la frustration initiale à l’excitation de la réussite). Un spectateur qui ressent est un spectateur qui retient.
+
+Appel à l’action subtil : lors de la promotion de la formation cible, veiller à ce que ça ne brise pas le quatrième mur de l’histoire de manière abrupte. L’appel doit sembler faire partie de l’histoire, comme un conseil sincère plutôt qu’une pub. Par exemple, parler de la formation en disant comment elle a été conçue pour les aider, ou raconter en une phrase comment elle a aidé le narrateur ou d’autres personnes, avant d’inviter à la rejoindre.
+
+Une fois toutes ces consignes appliquées, produire le script vidéo final avec les sections HOOK, INTRO, STORY, etc. clairement indiquées comme titres, puis le contenu développé en dessous de chacune. Ce script doit être prêt à l’emploi : le créateur de contenu pourrait le lire tel quel face caméra ou en voix off. On doit y retrouver une accroche captivante, un storytelling immersif, une progression logique jusqu’à la transformation, et un appel à l’action motivant. En suivant ce prompt, l’IA fournira un script de très haute qualité, adapté à Content Engine Pro et optimisé pour engager l’audience tout en la guidant vers l’action désirée.
+
+NB : Ces consignes sont destinées à l’IA et ne doivent pas apparaître textuellement dans le script final généré — elles servent uniquement à guider la rédaction.

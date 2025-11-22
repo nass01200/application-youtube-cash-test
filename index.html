@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>Dopeur Chaine YouTube</title>
   <link rel="manifest" href="manifest.webmanifest">
   <style>
@@ -24,6 +24,8 @@ button.primary{background:linear-gradient(90deg,var(--accent),var(--accent2));bo
 .stats{display:flex;flex-direction:column;gap:12px;margin-top:16px}
 .stat-circle{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px}
 .badge{font-size:12px;color:var(--muted)}
+.topbar .row button{height:28px;min-height:28px;font-size:12px;padding:0 10px;border-radius:8px}
+.topbar .row .primary{line-height:28px}
 .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .progressbar{height:6px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden}
 .progressbar>div{height:6px;background:linear-gradient(90deg,var(--accent2),var(--accent));width:0%}
@@ -773,7 +775,7 @@ function startOnboardingIfNeeded(){try{const done=!!(state.ui&&state.ui.onboardi
 function autoRecover(){try{const okForm=Array.isArray(state.formations);const okCols=Array.isArray(state.columns);if(!okForm||!okCols){localStorage.removeItem(storageKey());const fresh=load();Object.assign(state,fresh)}if(!state.ui)state.ui={};if(!state.ui.theme)state.ui.theme="dark"}catch(e){}}
 function load(){const sk=storageKey();const s=localStorage.getItem(sk);try{if(!s){const init=emptyState();localStorage.setItem(sk,JSON.stringify(init));return init}return JSON.parse(s)}catch(e){localStorage.removeItem(sk);const init=emptyState();localStorage.setItem(sk,JSON.stringify(init));return init}}
 function migrate(){state.seo=state.seo||{difficultyMax:40,topN:10,volumeMin:0};if(typeof state.seo.volumeMin!=="number")state.seo.volumeMin=0;state.seoKeywords=state.seoKeywords||[];state.ai=state.ai||{enabled:false,endpoint:"",model:"",apiKey:"",guidelines:""};state.cloud=state.cloud||{sync:true,table:"app_state",userId:"",loaded:false};if(typeof state.cloud.loaded!=="boolean")state.cloud.loaded=false;state.recordings=state.recordings||[];state.ui=state.ui||{theme:"dark",mobilePreview:false,sidebarCollapsed:true,lastSaved:"",lastSyncedTick:""};if(typeof state.ui.mobilePreview!=="boolean")state.ui.mobilePreview=false;if(typeof state.ui.sidebarCollapsed!=="boolean")state.ui.sidebarCollapsed=true;if(typeof state.ui.lastSaved!=="string")state.ui.lastSaved="";if(typeof state.ui.lastSyncedTick!=="string")state.ui.lastSyncedTick=""}
-function save(){state.ui.lastSaved=now();localStorage.setItem(storageKey(),JSON.stringify(state));const el=document.getElementById("saveStatus");if(el){el.textContent="Synchronisation en cours…"}if(state.cloud?.sync&&state.cloud?.loaded===true){cloudSave().then(r=>{const el2=document.getElementById("saveStatus");if(el2){el2.textContent=r?.ok?"Synchronisé ✔":"Erreur de synchronisation ❌"}}).catch(()=>{const el2=document.getElementById("saveStatus");if(el2){el2.textContent="Erreur de synchronisation ❌"}})}renderAll()}
+function save(){state.ui.lastSaved=now();localStorage.setItem(storageKey(),JSON.stringify(state));const el=document.getElementById("saveStatus");if(state.cloud?.sync&&state.cloud?.loaded===true){if(el)el.textContent="Synchronisation en cours…";cloudSave().then(r=>{const el2=document.getElementById("saveStatus");if(el2){el2.textContent=r?.ok?"Synchronisé ✔":"Erreur de synchronisation ❌"}}).catch(()=>{const el2=document.getElementById("saveStatus");if(el2){el2.textContent="Erreur de synchronisation ❌"}})}else{if(el)el.textContent="Sauvegardé localement"}renderAll()}
 function getSupabase(){try{return supabaseClient}catch(e){return null}}
 window.addEventListener('online',()=>{try{refreshAuth()}catch(e){}})
 window.addEventListener('offline',()=>{try{window.currentSession=null;updateAuthUI()}catch(e){}})
@@ -1070,28 +1072,29 @@ function drawLine(ctx,vals,color){const w=ctx.canvas.width;const h=ctx.canvas.he
 window.addEventListener("keydown",(e)=>{const k=(e.key||"").toLowerCase();if(k==="m"){state.ui.mobilePreview=true;applyPreviewMode();save()}else if(k==="d"){state.ui.mobilePreview=false;applyPreviewMode();save()}})
 {const ex=document.getElementById("exportJson");if(ex)ex.onclick=()=>{try{const a=document.createElement("a");a.href="data:application/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(state,null,2));const d=new Date();const name=`cep-backup-${d.toISOString().slice(0,10)}.json`;a.download=name;document.body.appendChild(a);a.click();a.remove();showAppError(`Export sauvegarde: ${name}`)}catch(e){}}}
 function closeSettings(){document.getElementById("modalSettings").style.display="none"}
-function saveSettings(){state.settings.pts.script=+document.getElementById("ptsScript").value
-  state.settings.pts.shoot=+document.getElementById("ptsShoot").value
-  state.settings.pts.edit=+document.getElementById("ptsEdit").value
-  state.settings.pts.prog=+document.getElementById("ptsProg").value
-  if(!state.ai)state.ai={}
-  state.ai.enabled=!!document.getElementById("aiEnabled").checked
-  state.ai.endpoint=document.getElementById("aiEndpoint").value
-  state.ai.model=document.getElementById("aiModel").value
-  state.ai.apiKey=document.getElementById("aiApiKey").value
-  state.ai.guidelines=document.getElementById("aiGuidelines").value
+function saveSettings(){state.settings=state.settings||{pts:{script:2,shoot:3,edit:2,prog:1}};const g=(id)=>document.getElementById(id);
+  state.settings.pts.script=+(g("ptsScript")?.value||state.settings.pts.script||2)
+  state.settings.pts.shoot=+(g("ptsShoot")?.value||state.settings.pts.shoot||3)
+  state.settings.pts.edit=+(g("ptsEdit")?.value||state.settings.pts.edit||2)
+  state.settings.pts.prog=+(g("ptsProg")?.value||state.settings.pts.prog||1)
+  state.ai=state.ai||{}
+  state.ai.enabled=!!(g("aiEnabled")?.checked??state.ai.enabled)
+  state.ai.endpoint=(g("aiEndpoint")?.value||state.ai.endpoint||"")
+  state.ai.model=(g("aiModel")?.value||state.ai.model||"")
+  state.ai.apiKey=(g("aiApiKey")?.value||state.ai.apiKey||"")
+  state.ai.guidelines=(g("aiGuidelines")?.value||state.ai.guidelines||"")
   state.seo=state.seo||{difficultyMax:40,topN:10,volumeMin:0}
-  state.seo.difficultyMax=+document.getElementById("seoDifficultyMax").value||40
-  state.seo.volumeMin=+document.getElementById("seoVolumeMin").value||0
-  state.seo.topN=+document.getElementById("seoTopN").value||10
+  state.seo.difficultyMax=+(g("seoDifficultyMax")?.value||state.seo.difficultyMax||40)
+  state.seo.volumeMin=+(g("seoVolumeMin")?.value||state.seo.volumeMin||0)
+  state.seo.topN=+(g("seoTopN")?.value||state.seo.topN||10)
   if(!state.ai.endpoint){const ep=aiExpectedEndpoint();if(ep)state.ai.endpoint=ep}
   if(!state.ai.apiKey&&state.cloud?.supabaseKey){state.ai.apiKey=state.cloud.supabaseKey}
   state.cloud=state.cloud||{}
-  state.cloud.sync=!!document.getElementById("cloudSync").checked
-  state.cloud.supabaseUrl=document.getElementById("cloudUrl").value
-  state.cloud.supabaseKey=document.getElementById("cloudKey").value
-  state.cloud.table=document.getElementById("cloudTable").value||"app_state"
-  state.cloud.userId=document.getElementById("cloudUser").value
+  state.cloud.sync=!!(g("cloudSync")?.checked??state.cloud.sync)
+  state.cloud.supabaseUrl=(g("cloudUrl")?.value||state.cloud.supabaseUrl||"")
+  state.cloud.supabaseKey=(g("cloudKey")?.value||state.cloud.supabaseKey||"")
+  state.cloud.table=(g("cloudTable")?.value||state.cloud.table||"app_state")
+  state.cloud.userId=(g("cloudUser")?.value||state.cloud.userId||"")
   save()}
 function saveSettingsAndClose(){saveSettings();closeSettings()}
 function resetAll(){const fid=state.ui.activeFormation;const f=getFormation(fid);if(!fid||!f){alert("Aucun projet actif");return}const ok=confirm(`Réinitialiser complètement le projet "${f.name}" (conserver le nom, vider fiches/dates) ?`);if(!ok)return;state.videos=state.videos.filter(v=>v.formation!==fid);state.productivity=state.productivity.filter(p=>p.formation!==fid);state.columns=state.columns.filter(c=>c.formation!==fid);state.seoKeywords=[];state.recordings=(Array.isArray(state.recordings)?state.recordings:[]).filter(r=>r.formation!==fid);COLS.forEach((c,i)=>state.columns.push({id:id(),formation:fid,name:c,order:i+1,icon:COL_ICONS[c]}));const keepTheme=state.ui?.theme;const keepMobile=state.ui?.mobilePreview;const keepSidebar=state.ui?.sidebarCollapsed;state.ui={theme:keepTheme,mobilePreview:!!keepMobile,sidebarCollapsed:!!keepSidebar,activeFormation:fid,activeColumn:getColumns(fid)[0]?.id||null,agenda:{spanPrev:7,spanNext:14,selected:todayLocal(),statusFilter:"tous",videoIndex:0},onboardingCompleted:false,lastSaved:"",lastSyncedTick:""};save();document.getElementById("importSummary").textContent="Projet réinitialisé: nom conservé, fiches/dates/UI nettoyés."}
@@ -1395,6 +1398,9 @@ document.querySelectorAll("#problems_and_diagnostics,.problems_and_diagnostics")
 {const b=document.getElementById("loginSubmit");if(b)b.onclick=submitLogin}
 {const b=document.getElementById("loginCreateAdmin");if(b)b.onclick=createDefaultAdmin}
 setTimeout(checkAuthAndLogin,300)
+
+// Mobile: garantir la visibilité du champ sous clavier iOS/Android
+document.addEventListener('focusin',e=>{try{const t=e.target;const tag=(t?.tagName||'').toUpperCase();if(tag==='INPUT'||tag==='TEXTAREA'){t.scrollIntoView({behavior:'smooth',block:'center'})}}catch{}})
 
 
 document.addEventListener("DOMContentLoaded",()=>{try{const c=getSupabase();if(c){c.auth.getSession().then(({data})=>{if(data&&data.session){window.currentSession=data.session;updateAuthUI()}})}}catch(e){}})

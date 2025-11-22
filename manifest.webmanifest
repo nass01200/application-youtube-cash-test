@@ -1,0 +1,31 @@
+{
+  "id": "com.dopeur.youtube",
+  "name": "Dopeur Chaine YouTube",
+  "short_name": "Dopeur YouTube",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/login.html",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone","window-controls-overlay"],
+  "orientation": "portrait",
+  "background_color": "#0a0b10",
+  "theme_color": "#0a0b10",
+  "description": "Scripts vidéo, prompteur et enregistrements",
+  "categories": ["productivity","video","education"],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    { "name": "Agenda", "description": "Vidéos du jour", "url": "/index.html" },
+    { "name": "Nouvelle vidéo", "description": "Créer une vidéo", "url": "/index.html" }
+  ],
+  "launch_handler": { "client_mode": "focus-existing" },
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "screenshots": [
+    { "src": "/screenshots/screen1.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow" },
+    { "src": "/screenshots/screen2.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow" },
+    { "src": "/screenshots/desktop.svg", "sizes": "1920x1080", "type": "image/svg+xml", "form_factor": "wide" }
+  ]
+}

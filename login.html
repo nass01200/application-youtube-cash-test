@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connexion • Dopeur Chaine YouTube</title>
+<style>
+body{margin:0;background:#0a0b10;color:#f5f5f7;font-family:system-ui,-apple-system,Segoe UI,Roboto,"SF Pro",sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center}
+.card{background:#111319;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;max-width:420px;width:92vw}
+.row{display:flex;gap:12px;align-items:center}
+.grid{display:grid;grid-template-columns:1fr;gap:10px}
+input,button{background:rgba(255,255,255,.06);color:#f5f5f7;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 12px;font-size:14px}
+button{cursor:pointer}
+.primary{background:linear-gradient(90deg,#6a5cff,#3bc8ff);border:none}
+.links{display:flex;justify-content:space-between;margin-top:10px}
+.badge{font-size:12px;color:#9fa4b3}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://obrhatwvdhkdcgpjrpou.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9icmhhdHd2ZGhrZGNncGpycG91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzODcwNjYsImV4cCI6MjA3ODk2MzA2Nn0.DkoXBYO_8OJP5CsOxspg1n2Wdh1HT5R3egxvsHeYuJM';
+let supabaseClient=null;try{if(SUPABASE_URL&&SUPABASE_ANON_KEY){supabaseClient=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true}})}}catch(e){}
+</script>
+</head>
+<body>
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><div class="title">Connexion</div><span class="badge">Dopeur Chaine YouTube</span></div>
+    <div class="grid">
+      <label>Email</label>
+      <input id="email" type="email" placeholder="email">
+      <label>Mot de passe</label>
+      <input id="password" type="password" placeholder="mot de passe">
+      <button id="loginBtn" class="primary">Connexion</button>
+      <div id="status" class="badge"></div>
+    </div>
+    <div class="links">
+      <a href="signup.html" class="badge">Créer un compte</a>
+      <a href="forgot.html" class="badge">Mot de passe oublié</a>
+      <button id="offlineBtn" class="badge" style="background:none;border:none;cursor:pointer">Continuer hors-ligne</button>
+      <button id="createDefaultAdmin" class="badge" style="background:none;border:none;cursor:pointer">Créer admin par défaut</button>
+    </div>
+  </div>
+<script>
+document.getElementById('loginBtn').onclick=async()=>{
+  const email=(document.getElementById('email').value||'').trim()
+  const password=(document.getElementById('password').value||'').trim()
+  const s=document.getElementById('status');s.textContent=''
+  try{
+    const c=supabaseClient
+    const {error}=await c.auth.signInWithPassword({email,password})
+    if(error){s.textContent=error.message;return}
+    localStorage.setItem('cep-remember-email',email);localStorage.setItem('cep-remember-pass',password)
+    location.href='index.html'
+  }catch(e){const msg=String(e?.message||e);if(msg.includes('Failed to fetch')){s.textContent='Connexion impossible: vérifiez l’URL Supabase ou votre réseau'}else{s.textContent=msg}}
+}
+document.getElementById('offlineBtn').onclick=()=>{try{localStorage.setItem('cep-offline','1')}catch(e){};location.href='index.html'}
+document.getElementById('createDefaultAdmin').onclick=async()=>{
+  const s=document.getElementById('status');s.textContent=''
+  try{
+    const c=supabaseClient
+    const {data,error}=await c.auth.signUp({email:'admin01@example.com',password:'admin01',options:{emailRedirectTo:location.origin+(location.pathname.includes('index.html')?'':'/index.html'),data:{pseudo:'admin01'}}})
+    if(error){s.textContent=error.message;return}
+    try{const uid=data?.user?.id||null;if(uid){await c.from('profiles').upsert({id:uid,email:'admin01@example.com',pseudo:'admin01'},{onConflict:'id'})}}catch(e){}
+    await c.auth.signOut()
+    s.textContent='Un email de confirmation a été envoyé. Validez votre adresse pour continuer.'
+  }catch(e){const msg=String(e?.message||e);s.textContent=msg}
+}
+</script>
+</body>
+</html>

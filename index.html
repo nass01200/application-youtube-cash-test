@@ -24,8 +24,10 @@ button.primary{background:linear-gradient(90deg,var(--accent),var(--accent2));bo
 .stats{display:flex;flex-direction:column;gap:12px;margin-top:16px}
 .stat-circle{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px}
 .badge{font-size:12px;color:var(--muted)}
-.topbar .row button{height:28px;min-height:28px;font-size:12px;padding:0 10px;border-radius:8px}
-.topbar .row .primary{line-height:28px}
+.topbar .row button{height:24px;min-height:24px;font-size:11px;padding:0 8px;border-radius:8px}
+.topbar .row .primary{line-height:24px}
+.modal-back{padding-top:calc(12px + env(safe-area-inset-top));padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+.modal{max-height:calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
 .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .progressbar{height:6px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden}
 .progressbar>div{height:6px;background:linear-gradient(90deg,var(--accent2),var(--accent));width:0%}
@@ -359,6 +361,7 @@ try{
       <button id="toggleSidebar" class="pill" title="Afficher/Masquer la sidebar">📚 Sidebar</button>
       <button id="openMotivation" class="pill" title="Motivation">🔥 Motivation</button>
       <button id="exportJson" class="pill" title="Exporter sauvegarde (.json)">⤓ Export</button>
+      <button id="hardReloadTop" class="pill" title="Actualiser">↻</button>
       <span id="saveStatus" class="badge"></span>
       <span id="userBadge" class="badge"></span>
     </div>
@@ -544,15 +547,17 @@ try{
       
       <div class="row" style="margin-top:12px"><label class="badge">Actions rapides</label></div>
   <div class="grid1" style="gap:8px">
-        <button id="setRestartOnboarding" class="pill">Relancer l’onboarding</button>
-        <button id="setEditProject">Modifier le projet</button>
-        <button id="setRecordings">Enregistrements</button>
-        <button id="setLogout" class="hidden">Se déconnecter</button>
-        <div class="row" style="gap:8px"><button id="setPreviewMobile" class="pill">📱 Mobile</button><button id="setPreviewDesktop" class="pill">🖥 PC</button></div>
-        <button id="setToggleSidebar" class="pill">📚 Sidebar</button>
-        <button id="setMotivation" class="pill">🔥 Motivation</button>
-        <button id="setExport" class="pill">⤓ Export</button>
-        <button id="purgeVideos" class="pill">Purger vidéos</button>
+         <button id="setRestartOnboarding" class="pill">Relancer l’onboarding</button>
+         <button id="setEditProject">Modifier le projet</button>
+         <button id="setRecordings">Enregistrements</button>
+         <button id="setLogout" class="hidden">Se déconnecter</button>
+         <div class="row" style="gap:8px"><button id="setPreviewMobile" class="pill">📱 Mobile</button><button id="setPreviewDesktop" class="pill">🖥 PC</button></div>
+         <button id="setToggleSidebar" class="pill">📚 Sidebar</button>
+         <button id="setMotivation" class="pill">🔥 Motivation</button>
+         <button id="setExport" class="pill">⤓ Export</button>
+         <button id="purgeVideos" class="pill">Purger vidéos</button>
+         <button id="purgeProductivity" class="pill">Purger productivité</button>
+         <button id="hardReloadSet" class="pill" title="Actualiser">↻ Reload</button>
       </div>
       <div class="row" style="margin-top:12px"><button onclick="saveSettingsAndClose()" class="primary">Enregistrer</button></div>
       <div class="row" style="margin-top:12px"><button onclick="resetAll()">Réinitialiser toutes les données</button></div>
@@ -788,9 +793,9 @@ async function refreshAuth(){const s=document.getElementById("authStatus");const
 function updateAuthUI(){const logged=!!window.currentSession||!!(state.cloud&&state.cloud.userId);const btnLogin=document.getElementById("btnLogin");if(btnLogin)btnLogin.classList.toggle("hidden",logged);const btnLogout=document.getElementById("btnLogout");if(btnLogout)btnLogout.classList.toggle("hidden",!logged);const top=document.getElementById("openLogin");if(top)top.classList.toggle("hidden",logged);const settingsLogin=document.getElementById("settingsLogin")||document.getElementById("setLogin");if(settingsLogin)settingsLogin.classList.toggle("hidden",logged);const settingsLogout=document.getElementById("settingsLogout")||document.getElementById("setLogout");if(settingsLogout)settingsLogout.classList.toggle("hidden",!logged);setUserBadge()}
 function deleteVideo(vid){vid=vid||state.ui?.videoId;if(!vid)return;const v=state.videos.find(x=>x.id===vid);if(!v)return;const ok=confirm(`Supprimer la fiche "${v.title||""}" ?`);if(!ok)return;state.videos=state.videos.filter(x=>x.id!==vid);save();closeVideo();showAppError("Fiche vidéo supprimée")}
 function getColumnById(id){return state.columns.find(c=>c.id===id)||null}
-function openAllVideos(){const m=document.getElementById("modalAllVideos");if(!m)return;m.style.display="flex";m.style.position="fixed";m.style.zIndex="10001";document.body.classList.add("modal-open");renderAllVideos()}
+function openAllVideos(){const m=document.getElementById("modalAllVideos");if(!m)return;m.style.display="flex";m.style.visibility="visible";m.style.position="fixed";m.style.zIndex="10010";document.body.classList.add("modal-open");renderAllVideos()}
 function closeAllVideos(){const m=document.getElementById("modalAllVideos");if(!m)return;m.style.display="none";document.body.classList.remove("modal-open")}
-function renderAllVideos(){const fid=state.ui.activeFormation;const selCol=document.getElementById("avColumn");const selStatus=document.getElementById("avStatus");const selSort=document.getElementById("avSort");const q=document.getElementById("avSearch");const sum=document.getElementById("avSummary");const tbl=document.getElementById("avTable");if(!fid||!selCol||!selStatus||!selSort||!q||!tbl)return;const cols=getColumns(fid);selCol.innerHTML="";const oAll=document.createElement("option");oAll.value="";oAll.textContent="Toutes colonnes";selCol.appendChild(oAll);cols.forEach(c=>{const o=document.createElement("option");o.value=c.id;o.textContent=c.name;selCol.appendChild(o)});const query=(q.value||"").toLowerCase();const colFilter=selCol.value||"";const statusFilter=selStatus.value||"";const sortKey=selSort.value||"dateAsc";let items=(state.videos||[]).filter(v=>v.formation===fid);if(colFilter)items=items.filter(v=>v.column===colFilter);if(statusFilter)items=items.filter(v=>v.status===statusFilter);if(query)items=items.filter(v=>((v.title||"").toLowerCase().includes(query)||((v.altTitle||"").toLowerCase().includes(query))));items.sort((a,b)=>{if(sortKey==="dateAsc")return (a.plannedDate||"").localeCompare(b.plannedDate||"");if(sortKey==="dateDesc")return (b.plannedDate||"").localeCompare(a.plannedDate||"");if(sortKey==="col"){const an=(getColumnById(a.column)?.name||"");const bn=(getColumnById(b.column)?.name||"");return an.localeCompare(bn)}return (a.title||"").localeCompare(b.title||"")});sum.textContent=`${items.length} fiches`;tbl.innerHTML="";const wrap=document.createElement("div");wrap.style.display="grid";wrap.style.gridTemplateColumns="2fr 1fr 1fr 1fr";wrap.style.gap="8px";const head=["Titre","Colonne","Date","Statut"];head.forEach(h=>{const d=document.createElement("div");d.className="badge";d.textContent=h;wrap.appendChild(d)});items.forEach(v=>{const col=getColumnById(v.column);const d=parseISOToLocal(v.plannedDate)||new Date(v.plannedDate||todayLocal());const label=d.toLocaleDateString("fr-FR",{day:"2-digit",month:"long",year:"numeric"});const t=document.createElement("div");t.textContent=v.title||"";const c=document.createElement("div");c.textContent=col?.name||"";const dd=document.createElement("div");dd.textContent=label;const s=document.createElement("div");s.textContent=v.status||"";wrap.appendChild(t);wrap.appendChild(c);wrap.appendChild(dd);wrap.appendChild(s)});tbl.appendChild(wrap);q.oninput=()=>renderAllVideos();selCol.onchange=()=>renderAllVideos();selStatus.onchange=()=>renderAllVideos();selSort.onchange=()=>renderAllVideos()}
+function renderAllVideos(){const fid=state.ui.activeFormation;const selCol=document.getElementById("avColumn");const selStatus=document.getElementById("avStatus");const selSort=document.getElementById("avSort");const q=document.getElementById("avSearch");const sum=document.getElementById("avSummary");const tbl=document.getElementById("avTable");if(!selCol||!selStatus||!selSort||!q||!tbl)return;const cols=fid?getColumns(fid):[];selCol.innerHTML="";const oAll=document.createElement("option");oAll.value="";oAll.textContent="Toutes colonnes";selCol.appendChild(oAll);cols.forEach(c=>{const o=document.createElement("option");o.value=c.id;o.textContent=c.name;selCol.appendChild(o)});const query=(q.value||"").toLowerCase();const colFilter=selCol.value||"";const statusFilter=selStatus.value||"";const sortKey=selSort.value||"dateAsc";let items=(state.videos||[]).filter(v=>!fid||v.formation===fid);if(colFilter)items=items.filter(v=>v.column===colFilter);if(statusFilter)items=items.filter(v=>v.status===statusFilter);if(query)items=items.filter(v=>((v.title||"").toLowerCase().includes(query)||((v.altTitle||"").toLowerCase().includes(query))));items.sort((a,b)=>{if(sortKey==="dateAsc")return (a.plannedDate||"").localeCompare(b.plannedDate||"");if(sortKey==="dateDesc")return (b.plannedDate||"").localeCompare(a.plannedDate||"");if(sortKey==="col"){const an=(getColumnById(a.column)?.name||"");const bn=(getColumnById(b.column)?.name||"");return an.localeCompare(bn)}return (a.title||"").localeCompare(b.title||"")});sum.textContent=`${items.length} fiches`;tbl.innerHTML="";const wrap=document.createElement("div");wrap.style.display="grid";wrap.style.gridTemplateColumns="2fr 1fr 1fr 1fr";wrap.style.gap="8px";const head=["Titre","Colonne","Date","Statut"];head.forEach(h=>{const d=document.createElement("div");d.className="badge";d.textContent=h;wrap.appendChild(d)});items.forEach(v=>{const col=getColumnById(v.column);const d=parseISOToLocal(v.plannedDate)||new Date(v.plannedDate||todayLocal());const label=d.toLocaleDateString("fr-FR",{day:"2-digit",month:"long",year:"numeric"});const t=document.createElement("div");t.textContent=v.title||"";const c=document.createElement("div");c.textContent=col?.name||"";const dd=document.createElement("div");dd.textContent=label;const s=document.createElement("div");s.textContent=v.status||"";wrap.appendChild(t);wrap.appendChild(c);wrap.appendChild(dd);wrap.appendChild(s)});tbl.appendChild(wrap);q.oninput=()=>renderAllVideos();selCol.onchange=()=>renderAllVideos();selStatus.onchange=()=>renderAllVideos();selSort.onchange=()=>renderAllVideos()}
 function setUserBadge(){const ub=document.getElementById("userBadge");if(!ub)return;const u=window.currentSession?.user||null;const email=u?.email||"";if(email){ub.textContent=`Connecté: ${email}`}else{ub.textContent=""}}
 async function signOut(){const s=document.getElementById("authStatus");const c=getSupabase();if(!c){if(s)s.textContent="Supabase absent";return}await c.auth.signOut();if(s)s.textContent="Non connecté"}
 function bootstrapSupabase(){state.cloud=state.cloud||{};state.cloud.table=state.cloud.table||"app_state";state.cloud.sync=true;if(!state.cloud.supabaseKey)state.cloud.supabaseKey=SUPABASE_ANON_KEY;state.ai=state.ai||{};state.ai.enabled=true;if(!state.ai.endpoint)state.ai.endpoint=EDGE_AI_ENDPOINT}
@@ -1104,6 +1109,8 @@ function resetAll(){const fid=state.ui.activeFormation;const f=getFormation(fid)
 {const pv=document.getElementById("purgeVideos");if(pv)pv.onclick=()=>purgeFormationVideos()}
 {const pp=document.getElementById("purgeProductivity");if(pp)pp.onclick=()=>purgeFormationProductivity()}
 {const rb=document.getElementById("resetAllBtn");if(rb)rb.onclick=()=>resetAll()}
+{const hr=document.getElementById("hardReloadTop");if(hr)hr.onclick=()=>hardReload()}
+{const hr2=document.getElementById("hardReloadSet");if(hr2)hr2.onclick=()=>hardReload()}
  
 function closeImport(){document.getElementById("modalImport").style.display="none"}
 function closeKeywords(){document.getElementById("modalKeywords").style.display="none"}
@@ -1377,7 +1384,6 @@ async function submitLogin(){const email=(document.getElementById("loginEmail")?
 async function logout(){try{const c=getSupabase();if(c){await c.auth.signOut()}try{localStorage.clear()}catch(e){}try{sessionStorage.clear()}catch(e){}window.currentSession=null;state.cloud.userId=null;state.cloud.loaded=false;state.cloud.sync=false;Object.assign(state,emptyState());migrate();save();updateAuthUI();closeSettings();openLogin();renderAll();showAppError("Déconnecté")}catch(e){}}
 async function createDefaultAdmin(){const s=document.getElementById("loginStatus");if(s)s.textContent="";try{const c=getSupabase();const email="admin01@example.com";const password="admin01";const {data,error}=await c.auth.signUp({email,password,options:{emailRedirectTo:REDIRECT_URL,data:{pseudo:"admin01"}}});if(error){if(s)s.textContent=error.message;return}try{const uid=data?.user?.id||null;if(uid){await c.from('profiles').upsert({id:uid,email,pseudo:'admin01'},{onConflict:'id'})}}catch(e){}await c.auth.signOut();if(s)s.textContent="Un email de confirmation a été envoyé. Validez votre adresse pour continuer.";showLoginModal("Un email de confirmation a été envoyé. Validez votre adresse pour continuer.")}catch(e){const msg=String(e?.message||e);if(s)s.textContent=msg}}
 function checkAuthAndLogin(){const offline=localStorage.getItem('cep-offline')==='1';if(offline)return;const c=getSupabase();if(!c){openLogin();return}c.auth.getSession().then(({data})=>{const u=data?.session?.user||null;if(u){if(!u.email_confirmed_at){c.auth.signOut().then(()=>{try{localStorage.clear()}catch(e){}try{sessionStorage.clear()}catch(e){}window.currentSession=null;state.cloud.userId=null;state.cloud.sync=false;save();updateAuthUI();showLoginModal("Votre email doit être confirmé pour accéder à la plateforme.")});return}state.cloud.userId=u.id;state.cloud.sync=true;localStorage.setItem('cep-last-user-id',u.id);renderAll()}else{openLogin()}})}
-if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
 try{
   autoRecover()
   bootstrapSupabase()
@@ -1401,6 +1407,8 @@ setTimeout(checkAuthAndLogin,300)
 
 // Mobile: garantir la visibilité du champ sous clavier iOS/Android
 document.addEventListener('focusin',e=>{try{const t=e.target;const tag=(t?.tagName||'').toUpperCase();if(tag==='INPUT'||tag==='TEXTAREA'){t.scrollIntoView({behavior:'smooth',block:'center'})}}catch{}})
+
+function hardReload(){try{caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k))).then(()=>location.reload()))}catch(e){location.reload()}}
 
 
 document.addEventListener("DOMContentLoaded",()=>{try{const c=getSupabase();if(c){c.auth.getSession().then(({data})=>{if(data&&data.session){window.currentSession=data.session;updateAuthUI()}})}}catch(e){}})

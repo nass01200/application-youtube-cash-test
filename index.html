@@ -535,6 +535,21 @@ try{
       </div>
       <label>Guidelines IA</label>
       <textarea id="aiGuidelines" rows="6" placeholder="Guidelines IA (optionnel)"></textarea>
+      <div class="row" style="gap:8px;margin-top:12px"><label class="badge">Configuration IA</label></div>
+      <div class="grid1" style="gap:8px">
+        <label>Activer IA</label>
+        <input id="aiEnabled" type="checkbox">
+        <label>Endpoint IA</label>
+        <input id="aiEndpoint" class="input" placeholder="https://votre-projet.supabase.co/functions/v1/ai">
+        <label>Modèle</label>
+        <input id="aiModel" class="input" placeholder="gemini-2.5-flash">
+        <label>IA API Key</label>
+        <input id="aiApiKey" class="input" placeholder="Supabase anon key">
+        <div class="row" style="gap:8px">
+          <button onclick="testAiEndpoint()" class="pill">Tester l’endpoint IA</button>
+          <div id="aiStatus" class="badge"></div>
+        </div>
+      </div>
       <div class="row" style="gap:8px;margin-top:12px"><label class="badge">Seuils SEO</label></div>
       <div class="grid1" style="gap:8px">
         <label>Difficulté max (KD)</label>
@@ -1051,11 +1066,17 @@ function drawLine(ctx,vals,color){const w=ctx.canvas.width;const h=ctx.canvas.he
   document.getElementById("seoDifficultyMax").value=state.seo?.difficultyMax||40
   document.getElementById("seoVolumeMin").value=state.seo?.volumeMin||0
   document.getElementById("seoTopN").value=state.seo?.topN||10
+  try{document.getElementById("aiEnabled").checked=!!(state.ai?.enabled)}catch{}
+  try{document.getElementById("aiEndpoint").value=(state.ai?.endpoint||aiExpectedEndpoint()||"")}catch{}
+  try{document.getElementById("aiModel").value=(state.ai?.model||"gemini-2.5-flash")}catch{}
+  try{document.getElementById("aiApiKey").value=((state.ai?.apiKey||state.cloud?.supabaseKey)||"")}catch{}
+  try{document.getElementById("aiStatus").textContent=""}catch{}
   let settingsAutosaveTimer=null
   const qsave=()=>{if(settingsAutosaveTimer)clearTimeout(settingsAutosaveTimer);settingsAutosaveTimer=setTimeout(()=>saveSettings(),400)}
   const bind=(id,ev)=>{const el=document.getElementById(id);if(el)el[ev]=qsave}
   bind("ptsScript","oninput");bind("ptsShoot","oninput");bind("ptsEdit","oninput");bind("ptsProg","oninput")
   bind("aiGuidelines","oninput")
+  bind("aiEnabled","onchange");bind("aiEndpoint","oninput");bind("aiModel","oninput");bind("aiApiKey","oninput")
   bind("seoDifficultyMax","oninput");bind("seoVolumeMin","oninput");bind("seoTopN","oninput")
 }}
  
